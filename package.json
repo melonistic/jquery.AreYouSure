@@ -12,7 +12,13 @@
   ],
   "version": "1.9.0",
   "license": "MIT/GPLv2",
-  "keywords": [ "dirty", "form", "onbeforeunload", "save", "check" ],
+  "keywords": [
+    "dirty",
+    "form",
+    "onbeforeunload",
+    "save",
+    "check"
+  ],
   "main": "jquery.are-you-sure.js",
   "engines": {
     "node": ">=0.8.0"
