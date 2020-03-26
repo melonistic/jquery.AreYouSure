@@ -13,19 +13,19 @@
 (function($) {
   
   $.fn.areYouSure = function(options) {
-      
-    var settings = $.extend(
-      {
-        'message' : 'You have unsaved changes!',
-        'dirtyClass' : 'dirty',
-        'change' : null,
-        'silent' : false,
-        'addRemoveFieldsMarksDirty' : false,
-        'fieldEvents' : 'change keyup propertychange input',
-        'fieldSelector': ":input:not(input[type=submit]):not(input[type=button])"
-      }, options);
 
-    var getValue = function($field) {
+    const settings = $.extend(
+        {
+          'message': 'You have unsaved changes!',
+          'dirtyClass': 'dirty',
+          'change': null,
+          'silent': false,
+          'addRemoveFieldsMarksDirty': false,
+          'fieldEvents': 'change keyup propertychange input',
+          'fieldSelector': ":input:not(input[type=submit]):not(input[type=button])"
+        }, options);
+
+    const getValue = function($field) {
       if ($field.hasClass('ays-ignore')
           || $field.hasClass('aysIgnore')
           || $field.attr('data-ays-ignore')
@@ -37,8 +37,8 @@
         return 'ays-disabled';
       }
 
-      var val;
-      var type = $field.attr('type');
+      let val;
+      let type = $field.attr('type');
       if ($field.is('select')) {
         type = 'select';
       }
@@ -51,7 +51,7 @@
         case 'select':
           val = '';
           $field.find('option').each(function(o) {
-            var $option = $(this);
+            const $option = $(this);
             if ($option.is(':selected')) {
               val += $option.val();
             }
@@ -64,21 +64,21 @@
       return val;
     };
 
-    var storeOrigValue = function($field) {
+    const storeOrigValue = function($field) {
       $field.data('ays-orig', getValue($field));
     };
 
-    var checkForm = function(evt) {
+    const checkForm = function(evt) {
 
-      var isFieldDirty = function($field) {
-        var origValue = $field.data('ays-orig');
+      const isFieldDirty = function($field) {
+        const origValue = $field.data('ays-orig');
         if (undefined === origValue) {
           return false;
         }
         return (getValue($field) != origValue);
       };
 
-      var $form = ($(this).is('form')) 
+      const $form = ($(this).is('form'))
                     ? $(this)
                     : $(this).parents('form');
 
@@ -88,11 +88,11 @@
         return;
       }
 
-      $fields = $form.find(settings.fieldSelector);
+      let $fields = $form.find(settings.fieldSelector);
 
       if (settings.addRemoveFieldsMarksDirty) {              
         // Check if field count has changed
-        var origCount = $form.data("ays-orig-field-count");
+        const origCount = $form.data("ays-orig-field-count");
         if (origCount != $fields.length) {
           setDirtyStatus($form, true);
           return;
@@ -100,9 +100,9 @@
       }
 
       // Brute force - check each field
-      var isDirty = false;
+      let isDirty = false;
       $fields.each(function() {
-        var $field = $(this);
+        const $field = $(this);
         if (isFieldDirty($field)) {
           isDirty = true;
           return false; // break
@@ -112,8 +112,8 @@
       setDirtyStatus($form, isDirty);
     };
 
-    var initForm = function($form) {
-      var fields = $form.find(settings.fieldSelector);
+    const initForm = function($form) {
+      const fields = $form.find(settings.fieldSelector);
       $(fields).each(function() { storeOrigValue($(this)); });
       $(fields).unbind(settings.fieldEvents, checkForm);
       $(fields).bind(settings.fieldEvents, checkForm);
@@ -121,25 +121,24 @@
       setDirtyStatus($form, false);
     };
 
-    var setDirtyStatus = function($form, isDirty) {
-      var changed = isDirty != $form.hasClass(settings.dirtyClass);
+    const setDirtyStatus = function($form, isDirty) {
+      const changed = (isDirty !== $form.hasClass(settings.dirtyClass));
       $form.toggleClass(settings.dirtyClass, isDirty);
-        
+
       // Fire change event if required
       if (changed) {
         if (settings.change) settings.change.call($form, $form);
-
-        if (isDirty) $form.trigger('dirty.areYouSure', [$form]);
-        if (!isDirty) $form.trigger('clean.areYouSure', [$form]);
+        const event = ((isDirty) ? 'dirty.areYouSure' : 'clean.areYouSure');
+        $form.trigger(event, [$form]);
         $form.trigger('change.areYouSure', [$form]);
       }
     };
 
-    var rescan = function() {
-      var $form = $(this);
-      var fields = $form.find(settings.fieldSelector);
-      $(fields).each(function() {
-        var $field = $(this);
+    const rescan = function () {
+      const $form = $(this);
+      const fields = $form.find(settings.fieldSelector);
+      $(fields).each(function () {
+        const $field = $(this);
         if (!$field.data('ays-orig')) {
           storeOrigValue($field);
           $field.bind(settings.fieldEvents, checkForm);
@@ -149,11 +148,11 @@
       $form.trigger('checkform.areYouSure');
     };
 
-    var reinitialize = function() {
+    const reinitialize = function() {
       initForm($(this));
-    }
+    };
 
-    if (!settings.silent && !window.aysUnloadSet) {
+/*    if (!settings.silent && !window.aysUnloadSet) {
       window.aysUnloadSet = true;
       $(window).bind('beforeunload', function() {
         $dirtyForms = $("form").filter('.' + settings.dirtyClass);
@@ -170,7 +169,38 @@
         }
         return settings.message;
       });
-    }
+    }*/
+
+    //TODO When the nav bar is redesigned, change these selector to 'navigable'. Perhaps, consider a parent selector.
+    $('body').find('a').on('click', '.navigable', function(event) {
+      if ($("form").filter('.dirty').length > 0) unsavedChangesDialog(event, this.href);
+    });
+
+    const unsavedChangesDialog = function(event, intendedDestinationHref) {
+      event.preventDefault();
+      // Selector of location of dialog
+      return $('#dialog-confirm-unsaved-changes').dialog({
+        resizable: false,
+        height: 'auto',
+        modal: true,
+        buttons: {
+          'Stay on Page': function() {
+            $(this).dialog('close');
+            return false;
+          },
+          'Leave page': function() {
+            $(this).dialog('close');
+            return window.location.href = intendedDestinationHref;
+          }
+        },
+        position: {
+          my: "top",
+          at: "top+150",
+          of: window,
+          collision: "fit"
+        }
+      });
+    };
 
     return this.each(function(elem) {
       if (!$(this).is('form')) {
@@ -181,11 +211,11 @@
       $form.submit(function() {
         $form.removeClass(settings.dirtyClass);
       });
-      $form.bind('reset', function() { setDirtyStatus($form, false); });
+      $form.on('reset', function() { setDirtyStatus($form, false); });
       // Add a custom events
-      $form.bind('rescan.areYouSure', rescan);
-      $form.bind('reinitialize.areYouSure', reinitialize);
-      $form.bind('checkform.areYouSure', checkForm);
+      $form.on('rescan.areYouSure', rescan);
+      $form.on('reinitialize.areYouSure', reinitialize);
+      $form.on('checkform.areYouSure', checkForm);
       initForm($form);
     });
   };
